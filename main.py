@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--split_type', type=str, default='01')
 
     parser.add_argument('--save_model_interval', type=int, default=1000)
+    parser.add_argument('--test_interval', type=int, default=1000)
     parser.add_argument('--save_test', type=int, default=1000)
 
     args = parser.parse_args()
