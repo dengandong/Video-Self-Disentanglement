@@ -30,7 +30,7 @@ def conv2d(input_, output_channels, kernel_size, name="conv2d"):
     pass
 
 
-def deconv2d(input_, output_channels, kernel_size, batch_size, ratio=2, name='deconv3d'):
+def deconv2d(input_, output_channels, kernel_size, batch_size=4, ratio=2, name='deconv3d'):
     _, height, width, input_channels = input_.get_shape()
     with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
         weight = tf.get_variable('weight', [kernel_size, kernel_size, output_channels, input_channels])
@@ -55,8 +55,8 @@ def conv3d(input_, output_channels, kernel_size, name="conv3d"):
         return out
 
 
-def deconv3d(input_, output_channels, kernel_size, batch_size, ratio=2, name='deconv3d'):
-    batch_size, time_steps, height, width, input_channels = input_.get_shape()
+def deconv3d(input_, output_channels, kernel_size, batch_size=4, ratio=2, name='deconv3d'):
+    _, time_steps, height, width, input_channels = input_.get_shape()
     with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
         weight = tf.get_variable('weight', [1, kernel_size, kernel_size, output_channels, input_channels])
         bias = tf.get_variable('bias', [output_channels], initializer=tf.constant_initializer(0.0))
