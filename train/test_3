@@ -1,6 +1,0 @@
-nohup: ignoring input
-Traceback (most recent call last):
-  File "import_test.py", line 1, in <module>
-srun: error: SH-IDC1-10-198-6-56: task 0: Exited with exit code 1
-    import dataloader.UCF101 as UCF101
-ModuleNotFoundError: No module named 'dataloader'
