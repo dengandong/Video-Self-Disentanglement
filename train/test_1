@@ -1,6 +1,0 @@
-nohup: ignoring input
-Traceback (most recent call last):
-  File "self_supervised.py", line 5, in <module>
-    from dataloader import UCF101
-ModuleNotFoundError: No module named 'dataloader'
-srun: error: SH-IDC1-10-198-6-56: task 0: Exited with exit code 1
