@@ -30,13 +30,13 @@ def conv2d(input_, output_channels, kernel_size, name="conv2d"):
     pass
 
 
-def deconv2d(input_, output_channels, kernel_size, ratio=2, name='deconv3d'):
+def deconv2d(input_, output_channels, kernel_size, batch_size, ratio=2, name='deconv3d'):
     _, height, width, input_channels = input_.get_shape()
     with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
         weight = tf.get_variable('weight', [kernel_size, kernel_size, output_channels, input_channels])
         bias = tf.get_variable('bias', [output_channels], initializer=tf.constant_initializer(0.0))
         out = tf.nn.conv2d_transpose(input_, weight,
-                                     output_shape=tf.TensorShape([32, ratio * height, ratio * width, output_channels]),
+                                     output_shape=tf.TensorShape([batch_size, ratio * height, ratio * width, output_channels]),
                                      strides=[1, 2, 2, 1], padding="SAME") + bias
         out = tf.layers.batch_normalization(out, axis=-1)
         out = tf.nn.relu(out)
@@ -55,13 +55,13 @@ def conv3d(input_, output_channels, kernel_size, name="conv3d"):
         return out
 
 
-def deconv3d(input_, output_channels, kernel_size, ratio=2, name='deconv3d'):
+def deconv3d(input_, output_channels, kernel_size, batch_size, ratio=2, name='deconv3d'):
     batch_size, time_steps, height, width, input_channels = input_.get_shape()
     with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
         weight = tf.get_variable('weight', [1, kernel_size, kernel_size, output_channels, input_channels])
         bias = tf.get_variable('bias', [output_channels], initializer=tf.constant_initializer(0.0))
         out = tf.nn.conv3d_transpose(input_, weight,
-                                     output_shape=tf.TensorShape([32, time_steps, ratio*height, ratio*width, output_channels]),
+                                     output_shape=tf.TensorShape([batch_size, time_steps, ratio*height, ratio*width, output_channels]),
                                      strides=[1, 1, 2, 2, 1], padding="SAME") + bias
         out = tf.layers.batch_normalization(out, axis=-1)
         out = tf.nn.relu(out)
@@ -171,22 +171,22 @@ def cnn_2d_inference(frames, name='cnn_2d_inference'):
         return out
 
 
-def cnn_2d_decode_inference(code, name='deconv2d_inference'):  # (128, 32, 600)
+def cnn_2d_decode_inference(code, batch_size, name='deconv2d_inference'):  # (128, 32, 600)
     with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
-        code = tf.layers.dense(code, 512, activation=tf.nn.relu)  # (128, 512)
+        code = tf.layers.dense(code, 64, activation=tf.nn.relu)  # (128, 512)
         code = dim_expand_2d(code)  # (128, 16, 16, 512)
 
-        deconv3_3 = deconv2d(code, 512, 3, name='deconv3_3')  # 32
-        deconv3_2 = conv2d(deconv3_3, 512, 3, name='deconv3_2')
-        deconv3_1 = conv2d(deconv3_2, 512, 3, name='deconv3_1')
+        deconv3_3 = deconv2d(code, 64, 3, batch_size, name='deconv3_3')  # 32
+        deconv3_2 = conv2d(deconv3_3, 64, 3, name='deconv3_2')
+        deconv3_1 = conv2d(deconv3_2, 64, 3, name='deconv3_1')
 
-        deconv2_3 = deconv2d(deconv3_1, 256, 3, name='deconv2_3')  # 64
-        deconv2_2 = conv2d(deconv2_3, 256, 3, name='deconv2_2')
-        deconv2_1 = conv2d(deconv2_2, 256, 3, name='deconv2_1')
+        deconv2_3 = deconv2d(deconv3_1, 64, 3, batch_size, name='deconv2_3')  # 64
+        deconv2_2 = conv2d(deconv2_3, 64, 3, name='deconv2_2')
+        deconv2_1 = conv2d(deconv2_2, 64, 3, name='deconv2_1')
 
-        deconv1_3 = deconv2d(deconv2_1, 128, 3, name='deconv1_3')  # incompatible op input and calculated input ?!
-        deconv1_2 = conv2d(deconv1_3, 128, 3, name='deconv1_2')
-        deconv1_1 = conv2d(deconv1_2, 128, 3, name='deconv1_1')
+        deconv1_3 = deconv2d(deconv2_1, 64, 3, batch_size, name='deconv1_3')
+        deconv1_2 = conv2d(deconv1_3, 64, 3, name='deconv1_2')
+        deconv1_1 = conv2d(deconv1_2, 64, 3, name='deconv1_1')
 
         output = conv2d(deconv1_1, 3, 3, name='rgb')
     return output
@@ -206,14 +206,14 @@ def cnn_inference(frames, name='conv3d_inference'):
         conv1_3 = conv3d(conv1_2, 64, 3, name='conv1_3')
         conv1 = pool3d(conv1_3, name='pool1')  # [batch, time_step, 112, 112, 64]
 
-        conv2_1 = conv3d(conv1, 128, 3, name='conv2_1')
-        conv2_2 = conv3d(conv2_1, 128, 3, name='conv2_2')
-        conv2_3 = conv3d(conv2_2, 128, 3, name='conv2_3')
+        conv2_1 = conv3d(conv1, 64, 3, name='conv2_1')
+        conv2_2 = conv3d(conv2_1, 64, 3, name='conv2_2')
+        conv2_3 = conv3d(conv2_2, 64, 3, name='conv2_3')
         conv2 = pool3d(conv2_3, name='pool2')  # [batch, time_step, 56, 56, 128]
 
-        conv3_1 = conv3d(conv2, 256, 3, name='conv3_1')
-        conv3_2 = conv3d(conv3_1, 256, 3, name='conv3_2')
-        conv3_3 = conv3d(conv3_2, 512, 3, name='conv3_3')
+        conv3_1 = conv3d(conv2, 64, 3, name='conv3_1')
+        conv3_2 = conv3d(conv3_1, 64, 3, name='conv3_2')
+        conv3_3 = conv3d(conv3_2, 64, 3, name='conv3_3')
         conv3 = pool3d(conv3_3, name='pool3')  # [batch, time_step, 28, 28, 512]
 
         # flatten = tf.reshape(conv3, [batch_size, time_steps, -1])
@@ -223,22 +223,22 @@ def cnn_inference(frames, name='conv3d_inference'):
         return out
 
 
-def cnn_decode_inference(code, name='deconv3d_inference'):  # (128, 32, 600)
+def cnn_decode_inference(code, batch_size, name='deconv3d_inference'):  # (128, 32, 600)
     with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
-        code = tf.layers.dense(code, 512, activation=tf.nn.relu)
+        code = tf.layers.dense(code, 64, activation=tf.nn.relu)
         code = dim_expand_3d(code)  # (128, 32, 28, 28, 512)
 
-        deconv3_3 = deconv3d(code, 512, 3, name='deconv3_3')  # 56
-        deconv3_2 = conv3d(deconv3_3, 512, 3, name='deconv3_2')
-        deconv3_1 = conv3d(deconv3_2, 512, 3, name='deconv3_1')
+        deconv3_3 = deconv3d(code, 64, 3, batch_size, name='deconv3_3')  # 56
+        deconv3_2 = conv3d(deconv3_3, 64, 3, name='deconv3_2')
+        deconv3_1 = conv3d(deconv3_2, 64, 3, name='deconv3_1')
 
-        deconv2_3 = deconv3d(deconv3_1, 256, 3, name='deconv2_3')  # 112
-        deconv2_2 = conv3d(deconv2_3, 256, 3, name='deconv2_2')
-        deconv2_1 = conv3d(deconv2_2, 256, 3, name='deconv2_1')
+        deconv2_3 = deconv3d(deconv3_1, 64, 3, batch_size, name='deconv2_3')  # 112
+        deconv2_2 = conv3d(deconv2_3, 64, 3, name='deconv2_2')
+        deconv2_1 = conv3d(deconv2_2, 64, 3, name='deconv2_1')
 
-        deconv1_3 = deconv3d(deconv2_1, 128, 3, name='deconv1_3')  # 224
-        deconv1_2 = conv3d(deconv1_3, 128, 3, name='deconv1_2')
-        deconv1_1 = conv3d(deconv1_2, 128, 3, name='deconv1_1')
+        deconv1_3 = deconv3d(deconv2_1, 64, 3, batch_size, name='deconv1_3')  # 224
+        deconv1_2 = conv3d(deconv1_3, 64, 3, name='deconv1_2')
+        deconv1_1 = conv3d(deconv1_2, 64, 3, name='deconv1_1')
 
         output = conv3d(deconv1_1, 3, 3, name='rgb')
     return output

@@ -14,7 +14,7 @@ def main():
     parser.add_argument('--frames_saved_path', type=str, default='data/101frames_16')
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--num_epochs', type=int, default=100)
-    parser.add_argument('--batch_size', type=str, default=32)
+    parser.add_argument('--batch_size', type=str, default=4)
     parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--lr_reduce_mode', type=str, default='step')
     parser.add_argument('--split_type', type=str, default='01')
@@ -26,8 +26,8 @@ def main():
 
     # model definition
     motion_encoder = MotionEncoderC3D()
-    content_encoder = ContentEncoder()
-    G = Decoder()
+    content_encoder = ContentEncoder(batch_size=args.batch_size)
+    G = Decoder(batch_size=args.batch_size)
     D = Discriminator()
     model = Model3D(args, motion_encoder, content_encoder, G, D)
 

@@ -15,9 +15,10 @@ class MotionEncoderC3D:
 
 
 class ContentEncoder:
-    def __init__(self, units=256, name='content_encoder_2'):
+    def __init__(self, batch_size, units=256, name='content_encoder_2'):
         self.hidden_units = units
         self.name = name
+        self.batch_size = batch_size
         pass
 
     def forward(self, frames):
@@ -29,7 +30,7 @@ class ContentEncoder:
             reduce_frames = gap_frames(frames)
             project_frames = cnn_2d_inference(reduce_frames, name='gap_conv')  # (128, 1, 512)
             content_code = tf.layers.dense(project_frames, self.hidden_units, activation=tf.nn.relu)
-            reduce_reconstruction = cnn_2d_decode_inference(content_code, name='gap_recon')
+            reduce_reconstruction = cnn_2d_decode_inference(content_code, batch_size=self.batch_size, name='gap_recon')
 
             content_code = tf.expand_dims(content_code, axis=1)
             content_code = tf.tile(content_code, [1, 16, 1])
@@ -38,11 +39,12 @@ class ContentEncoder:
 
 
 class Decoder:
-    def __init__(self, name='decoder_2'):
+    def __init__(self, batch_size, name='decoder_2'):
         self.name = name
+        self.batch_size = batch_size
         pass
 
     def forward(self, code):
         with tf.name_scope(self.name):
-            reconstruction = cnn_decode_inference(code, name='deconv_c3d')
+            reconstruction = cnn_decode_inference(code, batch_size=self.batch_size, name='deconv_c3d')
             return reconstruction
