@@ -80,6 +80,7 @@ def main():
                 model.save_model(sess, epoch)
             if should_test:
                 feed_dict = {handle_pl: test_handle}
+                sess.run(test_iterator.initializer)
                 model.test(sess, feed_dict)
 
 
