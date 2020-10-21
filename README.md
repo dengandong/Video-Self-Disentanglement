@@ -2,7 +2,7 @@
 
 This is a tensorflow implementation of video disentanglement via a self-supervised way.
 
-The framework aims at disentangling the motion and content of a video in an unsupervised way; after that, use the extracted motion code to generate frames with similiar motion and differnt content, we also use the same motion encoder after the generator to extract the motion code of the synthesized frames and expect the motion code to keep unchaged in this generation process, i.e. view the motion as a supervision.
+The framework aims at disentangling the motion and content of a video in an unsupervised way; after that, use the extracted motion code to generate frames with similiar motion and different content, we also use the same motion encoder after the generator to extract the motion code of the synthesized frames and expect the motion code to keep unchaged in this generation process, i.e. view the motion as a supervision.
 
 We expect this model to extract reasonable motion representation to facilitate action recognition and frame synthesis.
 
